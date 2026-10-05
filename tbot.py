@@ -8,6 +8,13 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 bot = TeleBot(os.getenv("TOKEN"))
 
+COMMANDS = [
+    ("start", "Starts a chat"),
+    ("rates", "Shows current USD, EUR and RUR rates"),
+    ("convert", "Converts rate from one to another"),
+    ("help", "Shows all commands"),
+]
+
 ALIASES = {"RUB": "RUR", "ROUBLE": "RUR", "DOLLAR": "USD", "EURO": "EUR"}
 
 CURRENCIES = {
@@ -16,7 +23,6 @@ CURRENCIES = {
     "RUR": ("🇷🇺", 4, 5),
 }
 SUPPORTED = set(CURRENCIES) | {"AMD"}
-
 
 def menu():
     kb = types.InlineKeyboardMarkup()
@@ -32,12 +38,18 @@ def format_rows(cur, row):
     return f"{flag} {cur}\nBuy: {row[buy_i]}\nSell: {row[sell_i]}"
 
 
-@bot.message_handler(commands=["start", "help"])
+@bot.message_handler(commands=["start"])
 def start(message):
     with open("exchange-rate.jpeg", "rb") as photo:
         bot.send_photo(message.chat.id, photo)
     bot.send_message(message.chat.id, "Բարի գալուստ Rate բոտ", reply_markup=menu())
 
+@bot.message_handler(commands=["help"])
+def help_cmd(message):
+    text = "Available commands:\n\n" + "\n".join(
+        f"/{name} - {desc}" for name, desc in COMMANDS
+    )
+    bot.send_message(message.chat.id, text)
 
 @bot.message_handler(commands=["rates"])
 def rates_cmd(message):
@@ -119,6 +131,7 @@ def convert_cmd(message):
 
 
 if __name__ == "__main__":
+    bot.set_my_commands([types.BotCommand(n, d) for n, d in COMMANDS])
     try:
         bot.infinity_polling(skip_pending=True)
     finally:
