@@ -4,9 +4,10 @@ A Telegram bot that shows current Armenian dram (AMD) exchange rates for USD, EU
 
 ## Features
 
-- `/start`, `/help` shows a welcome image and inline buttons for each currency
+- `/start` shows a welcome image and inline buttons for each currency
 - `/rates` shows buy/sell rates for USD, EUR and RUR
 - `/convert` converts between AMD, USD, EUR and RUR
+- `/help` shows all available commands
 - Results are cached for 2 minutes, so repeated requests don't re-scrape the site
 - If a scrape fails, the bot restarts the browser and falls back to the last cached rates when available
 
@@ -14,11 +15,12 @@ A Telegram bot that shows current Armenian dram (AMD) exchange rates for USD, EU
 
 | Command | Description |
 |---|---|
-| `/start`, `/help` | Welcome message and currency buttons |
+| `/start` | Welcome message and currency buttons |
 | `/rates` | Buy/sell rates for all supported currencies |
 | `/convert 100 usd` | Convert 100 USD to AMD |
 | `/convert 40000 amd usd` | Convert 40,000 AMD to USD |
 | `/convert 100 usd rub` | Convert 100 USD to RUR via AMD |
+| `/help`| Shows all available commands |
 
 Aliases are accepted: `rub` / `rouble` for RUR, `dollar` for USD, `euro` for EUR. Decimals can use `.` or `,`.
 
