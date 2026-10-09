@@ -149,7 +149,7 @@ def clear_cmd(message):
                 except Exception:
                     pass
 
-    bot.send_message(chat_id, "🧹 hat cleared", reply_markup=menu())
+    bot.send_message(chat_id, "🧹 Chat cleared", reply_markup=menu())
 
 if __name__ == "__main__":
     bot.set_my_commands([types.BotCommand(n, d) for n, d in COMMANDS])
