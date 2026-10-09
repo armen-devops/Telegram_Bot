@@ -12,6 +12,7 @@ COMMANDS = [
     ("start", "Starts a chat"),
     ("rates", "Shows current USD, EUR and RUR rates"),
     ("convert", "Converts rate from one to another"),
+    ("clear", "Deletes recent messages in this chat"),
     ("help", "Shows all commands"),
 ]
 
@@ -129,6 +130,26 @@ def convert_cmd(message):
         f"Effective rate: 1 {src} = {result / amount:,.2f} {dest}",
     )
 
+CLEAR_LIMIT = 500
+
+@bot.message_handler(commands=["clear"])
+def clear_cmd(message):
+    chat_id = message.chat.id
+    newest = message.message_id
+    oldest = max(1, newest - CLEAR_LIMIT)
+
+    for hi in range(newest, oldest - 1, -100):
+        ids = list(range(max(oldest, hi - 99), hi + 1))
+        try:
+            bot.delete_messages(chat_id, ids)
+        except Exception:
+            for mid in ids:
+                try:
+                    bot.delete_messages(chat_id, mid)
+                except Exception:
+                    pass
+
+    bot.send_message(chat_id, "🧹 hat cleared", reply_markup=menu())
 
 if __name__ == "__main__":
     bot.set_my_commands([types.BotCommand(n, d) for n, d in COMMANDS])
