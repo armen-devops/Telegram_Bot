@@ -1,5 +1,6 @@
 import logging, os
 import scraper as rates
+import threading
 
 from dotenv import load_dotenv
 from telebot import TeleBot, types
@@ -12,7 +13,6 @@ COMMANDS = [
     ("start", "Starts a chat"),
     ("rates", "Shows current USD, EUR and RUR rates"),
     ("convert", "Converts rate from one to another"),
-    ("clear", "Deletes recent messages in this chat"),
     ("help", "Shows all commands"),
 ]
 
@@ -73,18 +73,18 @@ def on_currency(call):
     except Exception:
         bot.send_message(call.message.chat.id, "⚠️ Couldn't load rates, try again in a minute.")
 
+SYMBOLS = {"USD": "$", "EUR": "€", "RUR": "₽", "AMD": "֏"}
+ALL_CUR = ["USD", "EUR", "RUR", "AMD"]
 
-def parse_convert(text):
-    parts = text.split()[1:]
-    if len(parts) not in (2, 3):
-        raise ValueError
-    amount = float(parts[0].replace(",", "."))
-    if amount <= 0:
-        raise ValueError
-    names = [ALIASES.get(p.upper(), p.upper()) for p in parts[1:]]
-    src = names[0]
-    dest = names[1] if len(names) == 2 else "AMD"
-    return amount, src, dest
+convert_state = {}
+
+def cur_kb(prefix, exclude=None):
+    kb = types.InlineKeyboardMarkup(row_width=4)
+    kb.add(*[
+        types.InlineKeyboardButton(f"{SYMBOLS[c]} {c}", callback_data=f"{prefix}:{c}")
+        for c in ALL_CUR if c != exclude
+    ])
+    return kb
 
 
 def to_amd(amount, cur, row):
@@ -103,53 +103,75 @@ def from_amd(amd, cur, row):
 
 @bot.message_handler(commands=["convert"])
 def convert_cmd(message):
-    usage = ("Usage:\n"
-             "/convert 100 usd → AMD\n"
-             "/convert 40000 amd usd\n"
-             "/convert 100 usd rub`")
+    convert_state.pop(message.chat.id, None)
+    bot.send_message(message.chat.id, "Convert from which currency?",
+                     reply_markup=cur_kb("from"))
+
+
+@bot.callback_query_handler(func=lambda c: c.data.startswith("from:"))
+def on_from(call):
+    src = call.data.split(":")[1]
+    convert_state[call.message.chat.id] = {"src": src}
+    bot.answer_callback_query(call.id)
+    bot.edit_message_text(f"{SYMBOLS[src]} ➜ ?\nConvert to which currency?",
+                          call.message.chat.id, call.message.message_id,
+                          reply_markup=cur_kb("to", exclude=src))
+
+
+@bot.callback_query_handler(func=lambda c: c.data.startswith("to:"))
+def on_to(call):
+    chat_id = call.message.chat.id
+    state = convert_state.get(chat_id)
+    bot.answer_callback_query(call.id)
+    if not state:
+        bot.send_message(chat_id, "Session expired, send /convert again.")
+        return
+    state["dest"] = call.data.split(":")[1]
+    bot.edit_message_text(
+        f"{SYMBOLS[state['src']]} ➜ {SYMBOLS[state['dest']]}\nHow much do you want to convert?",
+        chat_id, call.message.message_id)
+
+
+def waiting_for_amount(message):
+    state = convert_state.get(message.chat.id)
+    return bool(state and "dest" in state and message.text and not message.text.startswith("/"))
+
+
+@bot.message_handler(func=waiting_for_amount)
+def on_amount(message):
+    chat_id = message.chat.id
+    state = convert_state[chat_id]
     try:
-        amount, src, dest = parse_convert(message.text)
+        amount = float(message.text.replace(",", ".").replace(" ", ""))
+        if amount <= 0:
+            raise ValueError
     except ValueError:
-        bot.send_message(message.chat.id, usage)
+        bot.send_message(chat_id, "Please send a positive number, e.g. 100")
         return
 
-    if src not in SUPPORTED or dest not in SUPPORTED or src == dest:
-        bot.send_message(message.chat.id, usage)
-        return
-
+    src, dest = state["src"], state["dest"]
     try:
         row = rates.get_rows()[0]
         result = from_amd(to_amd(amount, src, row), dest, row)
     except Exception:
-        bot.send_message(message.chat.id, "⚠️ Couldn't load rates, try again in a minute.")
+        bot.send_message(chat_id, "⚠️ Couldn't load rates, try again in a minute.")
         return
 
+    convert_state.pop(chat_id, None)
     bot.send_message(
-        message.chat.id,
+        chat_id,
+        f"{SYMBOLS[src]} {src} ➜ {SYMBOLS[dest]} {dest}\n\n"
         f"{amount:,.2f} {src} = {result:,.2f} {dest}\n"
-        f"Effective rate: 1 {src} = {result / amount:,.2f} {dest}",
+        f"{fmt_rate(src, dest, amount, result)}",
     )
 
-CLEAR_LIMIT = 500
-
-@bot.message_handler(commands=["clear"])
-def clear_cmd(message):
-    chat_id = message.chat.id
-    newest = message.message_id
-    oldest = max(1, newest - CLEAR_LIMIT)
-
-    for hi in range(newest, oldest - 1, -100):
-        ids = list(range(max(oldest, hi - 99), hi + 1))
-        try:
-            bot.delete_messages(chat_id, ids)
-        except Exception:
-            for mid in ids:
-                try:
-                    bot.delete_messages(chat_id, mid)
-                except Exception:
-                    pass
-
-    bot.send_message(chat_id, "🧹 Chat cleared", reply_markup=menu())
+def fmt_rate(src, dest, amount, result):
+    if not result:
+        return ""
+    r = result / amount
+    if r < 1:
+        return f"1 {dest} = {1 / r:,.2f} {src}"
+    return f"1 {src} = {r:,.2f} {dest}"
 
 if __name__ == "__main__":
     bot.set_my_commands([types.BotCommand(n, d) for n, d in COMMANDS])
