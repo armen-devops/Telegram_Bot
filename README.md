@@ -81,7 +81,7 @@ The bot uses the first bank row on the rate.am list. Converting a foreign curren
    TOKEN=your_telegram_bot_token
    ```
 
-4. Make sure `exchange-rate.jpeg` is in the project root.
+4. Make sure `exchange-rate.jpg` is in the project root.
 
 5. Run the bot:
 
