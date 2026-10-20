@@ -73,8 +73,8 @@ def on_currency(call):
     except Exception:
         bot.send_message(call.message.chat.id, "⚠️ Couldn't load rates, try again in a minute.")
 
-SYMBOLS = {"USD": "$", "EUR": "€", "RUR": "₽", "AMD": "֏"}
-ALL_CUR = ["USD", "EUR", "RUR", "AMD"]
+SYMBOLS = {"USD": "$", "EUR": "€", "RUR": "₽", "GBP": "￡","AMD": "֏"}
+ALL_CUR = ["USD", "EUR", "RUR", "GBP","AMD"]
 
 convert_state = {}
 
