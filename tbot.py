@@ -41,7 +41,7 @@ def format_rows(cur, row):
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    with open("exchange-rate.jpeg", "rb") as photo:
+    with open("exchange-rate.jpg", "rb") as photo:
         bot.send_photo(message.chat.id, photo)
     bot.send_message(message.chat.id, "Բարի գալուստ Rate բոտ", reply_markup=menu())
 
@@ -73,8 +73,8 @@ def on_currency(call):
     except Exception:
         bot.send_message(call.message.chat.id, "⚠️ Couldn't load rates, try again in a minute.")
 
-SYMBOLS = {"USD": "$", "EUR": "€", "RUR": "₽", "GBP": "￡","AMD": "֏"}
-ALL_CUR = ["USD", "EUR", "RUR", "GBP","AMD"]
+SYMBOLS = {"USD": "$", "EUR": "€", "RUR": "₽", "AMD": "֏"}
+ALL_CUR = ["USD", "EUR", "RUR", "AMD"]
 
 convert_state = {}
 
