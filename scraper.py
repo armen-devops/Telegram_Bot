@@ -4,7 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as ec
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def _scrape():
         _driver = _make_driver()
     _driver.get(URL)
     WebDriverWait(_driver, 15).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, ROW_SELECTOR))
+        ec.presence_of_element_located((By.CSS_SELECTOR, ROW_SELECTOR))
     )
     rows = []
     for el in _driver.find_elements(By.CSS_SELECTOR, ROW_SELECTOR):
