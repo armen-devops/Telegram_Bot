@@ -1,4 +1,4 @@
-import logging, os, threading
+import logging, os
 import scraper as rates
 from dotenv import load_dotenv
 from telebot import TeleBot, types
