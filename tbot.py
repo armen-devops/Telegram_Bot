@@ -1,7 +1,6 @@
 import logging, os
 import scraper as rates
 import threading
-
 from dotenv import load_dotenv
 from telebot import TeleBot, types
 
