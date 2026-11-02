@@ -25,6 +25,18 @@ def _make_driver():
     opts.add_argument("--disable-dev-shm-usage")
     return webdriver.Chrome(options=opts)
 
+
+def _quit_driver():
+    global _driver
+    try:
+        if _driver:
+            _driver.quit()
+    except Exception:
+        log.exception("driver.quit() failed")
+    finally:
+        _driver = None
+
+
 def _scrape():
     global _driver
     if _driver is None:
@@ -40,8 +52,8 @@ def _scrape():
             rows.append(cells)
     return rows
 
+
 def get_rows():
-    global _driver
     with _lock:
         if time.time() - _cache["ts"] < CACHE_TTL and _cache["rows"]:
             return _cache["rows"]
@@ -49,17 +61,17 @@ def get_rows():
             rows = _scrape()
         except Exception:
             log.exception("scrape failed, restarting driver")
-            try:
-                if _driver:
-                    _driver.quit()
-            finally:
-                _driver = None
+            _quit_driver()
             if _cache["rows"]:
                 return _cache["rows"]
             raise
         _cache.update(ts=time.time(), rows=rows)
         return rows
 
+
+def updated_at():
+    return _cache["ts"]
+
+
 def close():
-    if _driver:
-        _driver.quit()
+    _quit_driver()
