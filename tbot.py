@@ -238,7 +238,8 @@ def on_amount(message):
 
 if __name__ == "__main__":
     bot.set_my_commands([types.BotCommand(n, d) for n, d in COMMANDS])
+    rates.start()
     try:
-        bot.infinity_polling(skip_pending=True)
+        bot.infinity_polling(timeout=20, long_polling_timeout=20, skip_pending=True)
     finally:
         rates.close()
