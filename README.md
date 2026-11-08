@@ -33,7 +33,7 @@ Telegram_Bot/
 ├── scraper.py          # Selenium scraper with background refresh and cache
 ├── exchange-rate.jpg   # Welcome image sent on /start
 ├── requirements.txt
-├── .env                # Your bot token (not committed)
+├── .env                # Your bot token
 ├── .gitignore
 └── README.md
 ```
@@ -129,7 +129,7 @@ Settings in `tbot.py`:
 | Setting | Default | Description |
 |---|---|---|
 | `STATE_TTL` | `300` | Seconds before an unfinished `/convert` flow expires |
-| `TZ` | `Europe/London` | Time zone used for the "Updated" line |
+| `TZ` | `Asia/Yerevan` | Time zone used for the "Updated" line(Also u can change timezone into yours) |
 | `PHOTO` | `exchange-rate.jpg` | Welcome image, looked up next to `tbot.py` |
 | `ERROR_TEXT` | `⚠️ Couldn't load rates...` | Message shown when rates can't be loaded |
 | `CLEAR_SWEEP` | `300` | How many recent message IDs `/clear` tries to delete |
