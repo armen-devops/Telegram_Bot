@@ -25,6 +25,7 @@ COMMANDS = [
     ("start", "Starts a chat"),
     ("rates", "Shows current USD, EUR and RUR rates"),
     ("convert", "Converts rate from one to another"),
+    ("clear", "Clears the chat"),
     ("help", "Shows all commands"),
 ]
 
@@ -234,6 +235,30 @@ def on_amount(message):
         f"{fmt_rate(src, dest, amount, result)}\n\n"
         f"{stamp()}",
     )
+
+CLEAR_SWEEP = 300
+
+def _delete_batch(chat_id, ids):
+    try:
+        bot.delete_messages(chat_id, ids)
+    except Exception as e:
+        log.debug("bulk delete failed (%s), falling back to one by one", e)
+        for mid in ids:
+            try:
+                bot.delete_message(chat_id, mid)
+            except Exception:
+                pass
+
+
+@bot.message_handler(commands=["clear"])
+def clear(message):
+    chat_id = message.chat.id
+    convert_state.pop(chat_id, None)
+
+    last = message.message_id
+    ids = list(range(last, max(0, last - CLEAR_SWEEP), -1))
+    for i in range(0, len(ids), 100):
+        _delete_batch(chat_id, ids[i:i + 100])
 
 
 if __name__ == "__main__":
