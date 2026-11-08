@@ -1,147 +1,188 @@
-# 🇦🇲 Rate Bot
+# Telegram Rate Bot
 
-A Telegram bot that shows current Armenian dram (AMD) exchange rates for USD, EUR and RUR, and converts amounts between currencies with a guided, button-based flow. Rates are scraped live from [rate.am](https://www.rate.am/hy/armenian-dram-exchange-rates/banks) using Selenium and headless Chrome.
+A Telegram bot that shows current Armenian dram (AMD) exchange rates and converts between currencies. Rates are scraped from [rate.am](https://www.rate.am/hy/armenian-dram-exchange-rates/banks) with Selenium (headless Chrome) and cached in the background, so replies are fast.
+
+Works on **Windows, macOS and Linux**.
 
 ## Features
 
-- `/start` shows a welcome image and inline buttons for each currency
-- `/rates` shows buy/sell rates for USD, EUR and RUR
-- `/convert` is a step-by-step converter between AMD, USD, EUR and RUR
-- `/help` shows all available commands
-- Every rates and conversion message ends with an **"Updated HH:MM"** line (Yerevan time), so you can see how fresh the data is
-- Results are cached for 2 minutes, so repeated requests don't re-scrape the site
-- If a scrape fails, the bot restarts the browser and falls back to the last cached rates when available. The "Updated" time then shows how old they are
-- Flexible amount input with validation (see below)
-- Unfinished conversions expire after 5 minutes
-- The welcome image is uploaded to Telegram once and reused afterwards
-- Errors are logged with full tracebacks, and the bot refuses to start if the token is missing
+- Current **USD, EUR and RUR** buy/sell rates against AMD
+- Guided **currency converter** (USD, EUR, RUR, AMD): pick the source currency, then the target, then type the amount
+- Inline currency buttons on the welcome message
+- **/clear** to wipe the chat
+- Background scraper that refreshes rates every 60 seconds and recovers automatically if Chrome crashes
+- "Updated HH:MM" timestamp on every answer
 
-## Usage
+## Commands
 
 | Command | Description |
 |---|---|
-| `/start` | Welcome message and currency buttons |
-| `/rates` | Buy/sell rates for all supported currencies |
-| `/convert` | Guided currency converter (see below) |
-| `/help` | Shows all available commands |
+| `/start` | Starts a chat, sends the welcome photo and currency buttons |
+| `/rates` | Shows current USD, EUR and RUR rates |
+| `/convert` | Converts an amount from one currency to another |
+| `/clear` | Clears the chat and cancels any unfinished `/convert` |
+| `/help` | Shows all commands |
 
-### Converting currencies
-
-1. Send `/convert`
-2. Tap the currency you want to convert **from**
-3. Tap the currency you want to convert **to**
-4. Type the amount
-
-Example result:
-
-```
-$ USD ➜ € EUR
-
-100.00 USD = 92.35 EUR
-1 EUR = 1.08 USD
-
-🕒 Updated 14:32
-```
-
-The rate line is always shown with the larger number first (for example `1 USD = 364.03 AMD` instead of `1 AMD = 0.00 USD`).
-
-### Accepted amounts
-
-| Input | Read as |
-|---|---|
-| `100` | 100 |
-| `12,5` or `12.5` | 12.5 |
-| `1,000` | 1000 |
-| `1 000 000` | 1000000 |
-| `1,234.56` | 1234.56 |
-
-Zero, negative numbers, `inf`, `nan`, text, and values of 1,000,000,000,000 or more are rejected, and the bot asks for a positive number. If the session expires (5 minutes of inactivity), just send `/convert` again.
-
-### How conversion works
-
-The bot uses the first bank row on the rate.am list. Converting a foreign currency to AMD uses the **buy** rate, and converting from AMD uses the **sell** rate. For two foreign currencies, the amount goes through AMD first.
+The command list is defined once in `COMMANDS` in `tbot.py`. `/help` and the Telegram command menu are both built from it.
 
 ## Project structure
 
 ```
-.
-├── tbot.py             # Telegram bot: handlers, convert flow, formatting
-├── scraper.py          # Selenium scraper with caching and driver recovery
-├── exchange-rate.jpg   # Image sent with /start
+Telegram_Bot/
+├── tbot.py             # Bot: commands, buttons, converter, /clear
+├── scraper.py          # Selenium scraper with background refresh and cache
+├── exchange-rate.jpg   # Welcome image sent on /start
+├── requirements.txt
 ├── .env                # Your bot token (not committed)
-└── .gitignore
+├── .gitignore
+└── README.md
 ```
 
 ## Requirements
 
-- Python 3.9+
-- Google Chrome installed (Selenium 4.6+ downloads a matching driver automatically)
-- A Telegram bot token from [@BotFather](https://t.me/BotFather)
-- Python packages: `pyTelegramBotAPI`, `selenium`, `python-dotenv`
-- On Windows only: `tzdata` (Python's `zoneinfo` needs it there)
+- **Python 3.9+** (the bot uses `zoneinfo`)
+  - Windows: download from [python.org](https://www.python.org/downloads/) and tick **"Add python.exe to PATH"** in the installer
+  - macOS: `brew install python` or download from [python.org](https://www.python.org/downloads/)
+  - Linux: usually preinstalled; otherwise `sudo apt install python3 python3-venv`
+- **Google Chrome** installed (Selenium downloads the matching driver automatically)
+  - Windows / macOS: install from [google.com/chrome](https://www.google.com/chrome/)
+  - Linux: install the `.deb` from the Chrome website (Ubuntu doesn't ship Chrome in `apt` by default)
+- **Git** (only if you clone the repo)
+- A bot token from [@BotFather](https://t.me/BotFather)
 
 ## Setup
 
-1. Clone the repository:
+### 1. Get the code
 
-   ```bash
-   git clone <your-repo-url>
-   cd <your-repo-folder>
-   ```
+```bash
+git clone <your-repo-url>
+cd Telegram_Bot
+```
 
-2. Install dependencies:
+### 2. Create a virtual environment
 
-   ```bash
-   pip install pyTelegramBotAPI selenium python-dotenv
-   ```
+| OS | Command |
+|---|---|
+| Windows (PowerShell / CMD) | `py -m venv venv` |
+| macOS / Linux | `python3 -m venv venv` |
 
-   On Windows, also run `pip install tzdata`.
+### 3. Activate it
 
-3. Create a `.env` file in the project root:
+| OS | Command |
+|---|---|
+| Windows (PowerShell) | `venv\Scripts\Activate.ps1` |
+| Windows (CMD) | `venv\Scripts\activate.bat` |
+| macOS / Linux | `source venv/bin/activate` |
 
-   ```
-   TOKEN=your_telegram_bot_token
-   ```
+You should see `(venv)` at the start of your terminal line.
 
-4. Make sure `exchange-rate.jpg` is in the project root.
+> **Windows PowerShell says "running scripts is disabled"?** Run this once, then activate again:
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+> ```
 
-5. Run the bot:
+### 4. Install dependencies
 
-   ```bash
-   python tbot.py
-   ```
+Same command on every OS (with the venv active):
 
-   If `TOKEN` is missing, the bot exits right away with `TOKEN is missing in .env`.
+```bash
+pip install -r requirements.txt
+```
 
-## Configuration
+If you are building `requirements.txt` yourself, it needs:
 
-Settings in `scraper.py`:
+```
+pyTelegramBotAPI
+selenium
+python-dotenv
+tzdata
+```
 
-| Setting | Default | Description |
-|---|---|---|
-| `URL` | rate.am banks page | Page to scrape |
-| `ROW_SELECTOR` | `div.group.flex.items-center.h-10` | CSS selector for rate rows |
-| `CACHE_TTL` | `120` | Seconds to cache scraped rates |
+`tzdata` is required on **Windows** (it has no built-in time zone database, so `zoneinfo` fails without it). It's harmless on macOS and Linux.
+
+Keep `pyTelegramBotAPI` up to date (`pip install -U pyTelegramBotAPI`), since `/clear` uses bulk message deletion.
+
+### 5. Configure
+
+Create a file named `.env` next to `tbot.py` with this content:
+
+```
+TOKEN=123456:your-telegram-bot-token
+```
+
+- **Windows:** make sure the file is really called `.env` and not `.env.txt` (enable "File name extensions" in File Explorer to check).
+- The bot exits with an error if `TOKEN` is missing.
+
+### 6. Run
+
+| OS | Command |
+|---|---|
+| Windows | `python tbot.py` |
+| macOS / Linux | `python3 tbot.py` |
+
+Inside an activated venv, `python tbot.py` works on every OS. Stop the bot with `Ctrl+C`. The scraper and Chrome are shut down cleanly.
+
+## Settings
 
 Settings in `tbot.py`:
 
 | Setting | Default | Description |
 |---|---|---|
 | `STATE_TTL` | `300` | Seconds before an unfinished `/convert` flow expires |
-| `TZ` | `Asia/Yerevan` | Time zone used for the "Updated" line |
+| `TZ` | `Europe/London` | Time zone used for the "Updated" line |
 | `PHOTO` | `exchange-rate.jpg` | Welcome image, looked up next to `tbot.py` |
 | `ERROR_TEXT` | `⚠️ Couldn't load rates...` | Message shown when rates can't be loaded |
+| `CLEAR_SWEEP` | `300` | How many recent message IDs `/clear` tries to delete |
 
-The `CURRENCIES` dict maps each currency to its flag and the column indexes of its buy/sell values, and `SYMBOLS` / `ALL_CUR` control what the converter shows. If rate.am changes its layout, `ROW_SELECTOR` is the first thing to update.
+Settings in `scraper.py`:
 
-## Notes
+| Setting | Default | Description |
+|---|---|---|
+| `URL` | rate.am banks page | Page the rates are scraped from |
+| `ROW_SELECTOR` | `div.group.flex.items-center.h-10` | CSS selector for the rate rows |
+| `REFRESH_EVERY` | `60` | Seconds between background refreshes |
+| `RETRY_AFTER` | `10` | Seconds to wait before retrying after a failed scrape |
+| `FIRST_LOAD_TIMEOUT` | `25` | Seconds a request waits for the first load of rates |
 
-- Chrome runs headless with `--no-sandbox` and `--disable-dev-shm-usage`, which makes it work in Docker and on small servers.
-- The scraper uses a single shared browser instance guarded by a lock, so concurrent requests are handled safely. If the browser crashes or fails to close, it is discarded and started fresh on the next request.
-- Converter progress is kept in memory per chat, so it resets when the bot restarts.
-- Check the logs first when something breaks. Scrape and conversion failures are logged with the full error.
-- Never commit your `.env` file. If a token leaks, revoke it in @BotFather and generate a new one.
+The `CURRENCIES` dict maps each currency to its flag and the column indexes of its buy and sell values in a scraped row. `SYMBOLS` holds the currency symbols used in the converter ($, €, ₽, ֏).
 
-## Disclaimer
+## How it works
 
-Rates are scraped from a third-party site and are for information only. They may be delayed or inaccurate, so check with your bank before making any transaction.
+### Scraper
+
+`scraper.py` starts a background thread that keeps one headless Chrome instance open and re-reads the rates page every `REFRESH_EVERY` seconds. The latest rows are kept in an in-memory cache. Bot handlers never open a browser themselves: they just read the cache through `get_rows()`.
+
+If a scrape fails, the driver is restarted and the scraper retries after `RETRY_AFTER` seconds. If the very first load takes longer than `FIRST_LOAD_TIMEOUT`, the user gets the error message instead of hanging.
+
+### Converter
+
+`/convert` is a guided flow:
+
+1. Pick the source currency (inline buttons)
+2. Pick the target currency
+3. Type the amount
+
+Conversions go through AMD: the source amount is turned into AMD at the **buy** rate, then into the target currency at the **sell** rate. Amounts like `100`, `1,000.50`, `1 000` and `100,5` are all understood. The flow expires after `STATE_TTL` seconds of inactivity.
+
+### /clear
+
+Telegram bots can't read chat history, so `/clear` deletes the last `CLEAR_SWEEP` message IDs in batches of 100 (the IDs in a private chat are sequential). It also resets any unfinished `/convert`.
+
+- Telegram only lets bots delete a user's messages that are less than 48 hours old. Older ones stay.
+- In groups the bot needs admin rights with the "Delete messages" permission.
+- If a chat has more than `CLEAR_SWEEP` recent messages, run `/clear` again or raise the value.
+- If bulk deletion fails (for example an old library version), the bot falls back to deleting messages one by one, which is slower.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `TOKEN is missing in .env` | Create the `.env` file in the same folder you run the bot from (on Windows check it isn't `.env.txt`) |
+| `ZoneInfoNotFoundError` (mostly Windows) | `pip install tzdata` |
+| `python` / `python3: command not found` | Windows: use `py`. macOS / Linux: use `python3`. Or activate the venv first and use `python` |
+| PowerShell blocks `Activate.ps1` | `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`, or use CMD and `activate.bat` |
+| "Couldn't load rates, try again in a minute" | The scraper hasn't loaded rates yet or rate.am changed. Check the terminal for scrape errors and, if the layout changed, update `ROW_SELECTOR` |
+| Chrome not found / driver errors | Install Google Chrome in its default location and make sure you have internet access (Selenium downloads the driver on first run) |
+| A Chrome window appears | Make sure `--headless=new` is still in `_make_driver()` in `scraper.py` |
+| macOS asks to allow Chrome / Terminal | Allow it in System Settings, then restart the bot |
+| `/clear` is slow | Upgrade `pyTelegramBotAPI` so bulk deletion works |
