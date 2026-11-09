@@ -1,9 +1,9 @@
 import logging, math, os, time
+import scraper as rates
+
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
-
-import scraper as rates
 from dotenv import load_dotenv
 from telebot import TeleBot, types
 
