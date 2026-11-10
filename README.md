@@ -1,6 +1,6 @@
 # Telegram Rate Bot
 
-A Telegram bot that shows current Armenian dram (AMD) exchange rates and converts between currencies. Rates are scraped from [rate.am](https://www.rate.am/hy/armenian-dram-exchange-rates/banks) with Selenium (headless Chrome) and cached in the background, so replies are fast.
+A Telegram bot that shows current Armenian dram (AMD) exchange rates and converts between currencies. Rates are scraped from [rate.am] with Selenium(headless Chrome) and cached in the background, so replies are fast.
 
 Works on **Windows, macOS and Linux**.
 
