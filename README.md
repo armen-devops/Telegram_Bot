@@ -55,7 +55,7 @@ Telegram_Bot/
 ### 1. Get the code
 
 ```bash
-git clone <your-repo-url>
+git clone <repo-url>
 cd Telegram_Bot
 ```
 
