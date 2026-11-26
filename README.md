@@ -26,7 +26,7 @@ Telegram_Bot/
 ├── Bot_folder/        # Bot source code (handlers, scraper)
 ├── Photo/             # Images used by the bot
 ├── .vscode/           # Editor settings
-├── .env               # Secrets (bot token) – not committed
+├── .env               # Secrets (bot token)
 ├── .gitignore
 ├── requirements.txt   # Python dependencies
 └── README.md
