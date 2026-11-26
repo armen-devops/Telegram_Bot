@@ -2,10 +2,10 @@ import logging, math, os, time
 import scraper as rates
 
 from datetime import datetime
-from pathlib import Path
-from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from telebot import TeleBot, types
+from pathlib import Path
+from zoneinfo import ZoneInfo
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
